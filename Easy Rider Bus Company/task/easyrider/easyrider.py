@@ -1,4 +1,5 @@
 import json
+import re
 
 
 def main():
@@ -6,20 +7,25 @@ def main():
     err = {key: 0 for key in check_dict[0].keys()}
     for catalog in check_dict:
         for key, value in catalog.items():
-            if key in ('bus_id', 'stop_id', 'next_stop'):
-                if not isinstance(value, int):
-                    err[key] += 1
-            elif key in ('stop_name', 'a_time'):
+            if key == 'stop_name':
                 if not isinstance(value, str) or len(value) < 1:
+                    err[key] += 1
+                elif not re.search(r'([A-Z][a-z]+ )+(Street|Avenue|Boulevard|Road)$', str(value)):
                     err[key] += 1
             elif key == 'stop_type':
                 if not isinstance(value, str) or len(value) > 1:
                     err[key] += 1
-                elif isinstance(value, str) and value not in 'SOF':
+                elif not re.match('[SOF]?$', str(value)):
                     err[key] += 1
-    print(f'Type and required field validation: {sum(err.values())} errors')
+            elif key == 'a_time':
+                if not isinstance(value, str) or len(value) < 5:
+                    err[key] += 1
+                elif not re.match(r'(2[0-3]|[01]\d):[0-5]\d$', str(value)):
+                    err[key] += 1
+    print(f'Format validation: {sum(err.values())} errors')
     for key, value in err.items():
-        print(f'{key}: {value}')
+        if key in ('stop_name', 'stop_type', 'a_time'):
+            print(f'{key}: {value}')
 
 
 if __name__ == "__main__":
